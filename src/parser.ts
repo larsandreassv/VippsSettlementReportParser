@@ -68,11 +68,11 @@ export class VippsSettlementReportParser {
             SettlementDate: this.parseField(),
             SettlementID: this.parseField(),
             SettlementAccount: this.parseField(),
-            Gross: this.parseNumber(this.parseField()),
+            Gross: this.toNumber(this.parseField()),
             Currency: this.parseField(),
-            Fee: this.parseNumber(this.parseField()),
-            Refund: this.parseNumber(this.parseField()),
-            Net: this.parseNumber(this.parseField()),
+            Fee: this.toNumber(this.parseField()),
+            Refund: this.toNumber(this.parseField()),
+            Net: this.toNumber(this.parseField()),
             NumberOfTransactions: parseInt(this.parseField())
         };
         this.skipLine();
@@ -92,11 +92,11 @@ export class VippsSettlementReportParser {
                 SettlementId: this.parseField(),
                 OrderID: this.parseField(),
                 SettlementDate: this.parseField(),
-                Gross: this.parseNumber(this.parseField()),
+                Gross: this.toNumber(this.parseField()),
                 Currency: this.parseField(),
-                Fee: this.parseNumber(this.parseField()),
-                Refund: this.parseNumber(this.parseField()),
-                Net: this.parseNumber(this.parseField())
+                Fee: this.toNumber(this.parseField()),
+                Refund: this.toNumber(this.parseField()),
+                Net: this.toNumber(this.parseField())
             });
             this.skipLine();
         }
@@ -105,7 +105,7 @@ export class VippsSettlementReportParser {
     }
 
     // Utility methods
-    private parseNumber(value: string): number {
+    private toNumber(value: string): number {
         if (!value) return 0;
         return parseFloat(value.replace(/\s/g, '').replace(',', '.'));
     }
