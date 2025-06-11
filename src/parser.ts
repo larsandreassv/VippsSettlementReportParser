@@ -35,8 +35,8 @@ export class VippsSettlementReportParser {
 
     private parseOrganization(): Organization {
         const organization = {
-            OrganizationNumber: this.getField(0),
-            MerchantName: this.getField(1)
+            OrganizationNumber: this.parseField(),
+            MerchantName: this.parseField()
         };
         this.skipLine();
         return organization;
@@ -44,36 +44,36 @@ export class VippsSettlementReportParser {
 
     private parseCompany(): Company {
         const company = {
-            Name: this.getField(0),
-            VisitingAddress: this.getField(1),
-            Postbox: this.getField(2),
-            Zipno: this.getField(3),
-            Place: this.getField(4),
-            Country: this.getField(5),
-            CompanyNumber: this.getField(6)
+            Name: this.parseField(),
+            VisitingAddress: this.parseField(),
+            Postbox: this.parseField(),
+            Zipno: this.parseField(),
+            Place: this.parseField(),
+            Country: this.parseField(),
+            CompanyNumber: this.parseField()
         };
         this.skipLine();
         return company;
     }
 
     private parseSettlement(): Settlement {
-        const firstField = this.getField(0);
+        const firstField = this.parseField();
         if (firstField !== 'SettlementInfo') {
             throw new Error('Expected SettlementInfo line');
         }
 
         const settlement = {
-            SalesUnitName: this.getField(1),
-            SaleUnitNumber: this.getField(2),
-            SettlementDate: this.getField(3),
-            SettlementID: this.getField(4),
-            SettlementAccount: this.getField(5),
-            Gross: this.parseNumber(this.getField(6)),
-            Currency: this.getField(7),
-            Fee: this.parseNumber(this.getField(8)),
-            Refund: this.parseNumber(this.getField(9)),
-            Net: this.parseNumber(this.getField(10)),
-            NumberOfTransactions: parseInt(this.getField(11))
+            SalesUnitName: this.parseField(),
+            SaleUnitNumber: this.parseField(),
+            SettlementDate: this.parseField(),
+            SettlementID: this.parseField(),
+            SettlementAccount: this.parseField(),
+            Gross: this.parseNumber(this.parseField()),
+            Currency: this.parseField(),
+            Fee: this.parseNumber(this.parseField()),
+            Refund: this.parseNumber(this.parseField()),
+            Net: this.parseNumber(this.parseField()),
+            NumberOfTransactions: parseInt(this.parseField())
         };
         this.skipLine();
         return settlement;
@@ -83,19 +83,20 @@ export class VippsSettlementReportParser {
         const transactions: Transaction[] = [];
 
         while (this.pos < this.length) {
+            this.parseField(); // Skip the first field (TransactionInfo)
             transactions.push({
-                SalesDate: this.getField(1),
-                SaleUnitName: this.getField(2),
-                SaleUnitNumber: this.getField(3),
-                TransactionId: this.getField(4),
-                SettlementId: this.getField(5),
-                OrderID: this.getField(6),
-                SettlementDate: this.getField(7),
-                Gross: this.parseNumber(this.getField(8)),
-                Currency: this.getField(9),
-                Fee: this.parseNumber(this.getField(10)),
-                Refund: this.parseNumber(this.getField(11)),
-                Net: this.parseNumber(this.getField(12))
+                SalesDate: this.parseField(),
+                SaleUnitName: this.parseField(),
+                SaleUnitNumber: this.parseField(),
+                TransactionId: this.parseField(),
+                SettlementId: this.parseField(),
+                OrderID: this.parseField(),
+                SettlementDate: this.parseField(),
+                Gross: this.parseNumber(this.parseField()),
+                Currency: this.parseField(),
+                Fee: this.parseNumber(this.parseField()),
+                Refund: this.parseNumber(this.parseField()),
+                Net: this.parseNumber(this.parseField())
             });
             this.skipLine();
         }
@@ -120,38 +121,30 @@ export class VippsSettlementReportParser {
         }
     }
 
-    private findLineEnd(): number {
-        let end = this.pos;
-        while (end < this.length) {
-            const char = this.text[end];
-            if (char === '\n' || char === '\r') {
-                break;
-            }
-            end++;
-        }
-        return end;
-    }
-
-    private getField(fieldIndex: number): string {
-        const lineEnd = this.findLineEnd();
-        let currentField = 0;
+    private parseField(): string {
         let fieldStart = this.pos;
+        let value = '';
 
-        for (let i = this.pos; i < lineEnd; i++) {
-            if (this.text[i] === ',') {
-                if (currentField === fieldIndex) {
-                    return this.text.slice(fieldStart, i).trim();
-                }
-                currentField++;
-                fieldStart = i + 1;
+        while (this.pos < this.length) {
+            const char = this.text[this.pos];
+            
+            // If we hit a comma, we've found the end of the field
+            if (char === ',') {
+                value = this.text.slice(fieldStart, this.pos).trim();
+                this.pos++; // Move past the comma
+                return value;
             }
+            
+            // If we hit a newline, we've found the end of the field and the line
+            if (char === '\n' || char === '\r') {
+                value = this.text.slice(fieldStart, this.pos).trim();
+                return value;
+            }
+            
+            this.pos++;
         }
 
-        // Last field
-        if (currentField === fieldIndex) {
-            return this.text.slice(fieldStart, lineEnd).trim();
-        }
-
-        return '';
+        // If we reach the end of the file
+        return this.text.slice(fieldStart, this.pos).trim();
     }
 } 
