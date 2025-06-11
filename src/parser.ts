@@ -26,6 +26,7 @@ export class VippsSettlementReportParser {
         this.skipLine(); // Skip settlement header
         const settlement: Settlement = this.parseSettlement();
 
+        this.skipLine(); // Skip fee header
         this.skipLine(); // Skip transaction header
         const transactions: Transaction[] = this.parseTransactions();
 
@@ -80,33 +81,22 @@ export class VippsSettlementReportParser {
 
     private parseTransactions(): Transaction[] {
         const transactions: Transaction[] = [];
-        let isFirstTransactionInfo = true;
 
         while (this.pos < this.length) {
-            const lineEnd = this.findLineEnd();
-            if (lineEnd === this.pos) break;  // Empty line
-
-            const firstField = this.getField(0);
-            if (firstField === 'TransactionInfo') {
-                if (isFirstTransactionInfo) {
-                    isFirstTransactionInfo = false;
-                } else {
-                    transactions.push({
-                        SalesDate: this.getField(1),
-                        SaleUnitName: this.getField(2),
-                        SaleUnitNumber: this.getField(3),
-                        TransactionId: this.getField(4),
-                        SettlementId: this.getField(5),
-                        OrderID: this.getField(6),
-                        SettlementDate: this.getField(7),
-                        Gross: this.parseNumber(this.getField(8)),
-                        Currency: this.getField(9),
-                        Fee: this.parseNumber(this.getField(10)),
-                        Refund: this.parseNumber(this.getField(11)),
-                        Net: this.parseNumber(this.getField(12))
-                    });
-                }
-            }
+            transactions.push({
+                SalesDate: this.getField(1),
+                SaleUnitName: this.getField(2),
+                SaleUnitNumber: this.getField(3),
+                TransactionId: this.getField(4),
+                SettlementId: this.getField(5),
+                OrderID: this.getField(6),
+                SettlementDate: this.getField(7),
+                Gross: this.parseNumber(this.getField(8)),
+                Currency: this.getField(9),
+                Fee: this.parseNumber(this.getField(10)),
+                Refund: this.parseNumber(this.getField(11)),
+                Net: this.parseNumber(this.getField(12))
+            });
             this.skipLine();
         }
 
