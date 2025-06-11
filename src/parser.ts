@@ -18,22 +18,22 @@ export class VippsSettlementReportParser {
         this.pos = 0;
 
         this.skipLine(); // Skip organization header
-        const organization: Organization = this.parseOrganization();
+        const organization: Organization = this.parseOrganizationRow();
 
         this.skipLine(); // Skip company header
-        const company: Company = this.parseCompany();
+        const company: Company = this.parseCompanyRow();
 
         this.skipLine(); // Skip settlement header
-        const settlement: Settlement = this.parseSettlement();
+        const settlement: Settlement = this.parseSettlementRow();
 
         this.skipLine(); // Skip fee header
         this.skipLine(); // Skip transaction header
-        const transactions: Transaction[] = this.parseTransactions();
+        const transactions: Transaction[] = this.parseTransactionRows();
 
         return { organization, company, settlement, transactions };
     }
 
-    private parseOrganization(): Organization {
+    private parseOrganizationRow(): Organization {
         const organization = {
             OrganizationNumber: this.parseField(),
             MerchantName: this.parseField()
@@ -42,7 +42,7 @@ export class VippsSettlementReportParser {
         return organization;
     }
 
-    private parseCompany(): Company {
+    private parseCompanyRow(): Company {
         const company = {
             Name: this.parseField(),
             VisitingAddress: this.parseField(),
@@ -56,7 +56,7 @@ export class VippsSettlementReportParser {
         return company;
     }
 
-    private parseSettlement(): Settlement {
+    private parseSettlementRow(): Settlement {
         const firstField = this.parseField();
         if (firstField !== 'SettlementInfo') {
             throw new Error('Expected SettlementInfo line');
@@ -79,7 +79,7 @@ export class VippsSettlementReportParser {
         return settlement;
     }
 
-    private parseTransactions(): Transaction[] {
+    private parseTransactionRows(): Transaction[] {
         const transactions: Transaction[] = [];
 
         while (this.pos < this.length) {
